@@ -2,6 +2,13 @@ import os
 import pandas as pd
 import sys
 
+def count_na_per_col(df):
+    import pandas as pd
+    count=df.isna().sum()
+    count=pd.DataFrame(count)
+    count=count[count[0]!=0]
+    return count
+
 def feat_eng(df):
     #total floors
     df['TotFlrSF']=df['1stFlrSF']+df['2ndFlrSF']
