@@ -2,3 +2,4 @@ prediction.csv
 models/
 __pycache__/
 prediction_tf.csv
+prediction_tf_allfeatures.csv
