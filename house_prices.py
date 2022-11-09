@@ -14,7 +14,6 @@ def feat_eng(df):
     df['TotFlrSF']=df['1stFlrSF']+df['2ndFlrSF']
     #total number of floors (1 or 2)
     df['nFlrs']=df['2ndFlrSF'].map(lambda x: int(x>0)+1.)#if df['2ndFlrSF']>0 then df['nFlrs']=2
-    df['AvgSF']=df['TotFlrSF']/df['nFlrs']
     df['GarageType']=df['GarageType'].fillna('NoGarage')
     df['GarageQual']=df['GarageQual'].fillna('NoGarage')
     df['GarageCond']=df['GarageCond'].fillna('NoGarage')
