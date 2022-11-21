@@ -10,6 +10,7 @@ def count_na_per_col(df):
     return count
 
 def feat_eng(df):
+    ''' performs dataframe cleaning and basic feature engineering'''
     #total floors
     df['TotFlrSF']=df['1stFlrSF']+df['2ndFlrSF']
     #total number of floors (1 or 2)
