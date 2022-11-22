@@ -33,6 +33,21 @@ def main():
     train,test=pd.read_csv(train_path),pd.read_csv(test_path)
     train,test=feat_eng(train),feat_eng(test)
     print(train.head())
+    int_cat_f=['SaleCondition','ExterQual','Neighborhood','KitchenQual','SaleType','PoolQC','MSZoning','GarageQual','Condition1','BldgType','FireplaceQu','GarageType']
+    int_num_f=['OverallQual','LotArea','BsmtFinSF1','TotalBsmtSF','GrLivArea','GarageArea','YearBuilt','GarageCars','TotRmsAbvGrd','MSSubClass','WoodDeckSF']
+    label='SalePrice'
+
+    split_fraction=0.2
+
+
+    inputs = {}
+    for name in int_num_f+int_cat_f:
+        if name in int_num_f:
+            dtype = tf.float32
+        if (name in int_cat_f):
+            dtype = tf.string
+        inputs[name] = tf.keras.Input(shape=(1,), name=name, dtype=dtype)
+
 
 if __name__ == '__main__':
     main()
