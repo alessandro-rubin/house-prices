@@ -6,10 +6,22 @@ import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 
+def feat_eng(df):
+    ''' performs dataframe cleaning and basic feature engineering'''
+    #total floors
+    df['TotFlrSF']=df['1stFlrSF']+df['2ndFlrSF']
+    #total number of floors (1 or 2)
+    df['nFlrs']=df['2ndFlrSF'].map(lambda x: int(x>0)+1.)#if df['2ndFlrSF']>0 then df['nFlrs']=2
+    df['GarageType']=df['GarageType'].fillna('NoGarage')
+    df['GarageQual']=df['GarageQual'].fillna('NoGarage')
+    df['GarageCond']=df['GarageCond'].fillna('NoGarage')
+    df['PoolQC']=df['PoolQC'].fillna('NoPool')
+    df['FireplaceQu']=df['FireplaceQu'].fillna('NoFp')
+    #garage cars vs house size
+    #number of bathrooms vs house size/n bedrooms
+    return df
 
 def score_and_visualize(model,x_test,y_test):
-
-
     predictions=model.predict(x_test)
     plt.figure(figsize=(10,10))
     plt.scatter(y_test,predictions)

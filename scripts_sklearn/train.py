@@ -15,20 +15,7 @@ from xgboost import XGBRegressor
 import pathlib
 from utils import *
 
-def feat_eng(df):
-    ''' performs dataframe cleaning and basic feature engineering'''
-    #total floors
-    df['TotFlrSF']=df['1stFlrSF']+df['2ndFlrSF']
-    #total number of floors (1 or 2)
-    df['nFlrs']=df['2ndFlrSF'].map(lambda x: int(x>0)+1.)#if df['2ndFlrSF']>0 then df['nFlrs']=2
-    df['GarageType']=df['GarageType'].fillna('NoGarage')
-    df['GarageQual']=df['GarageQual'].fillna('NoGarage')
-    df['GarageCond']=df['GarageCond'].fillna('NoGarage')
-    df['PoolQC']=df['PoolQC'].fillna('NoPool')
-    df['FireplaceQu']=df['FireplaceQu'].fillna('NoFp')
-    #garage cars vs house size
-    #number of bathrooms vs house size/n bedrooms
-    return df
+
 
 def pipeline_builder(n_cols,c_cols,o_cols,b_cols):
     numeric_transformer = Pipeline(steps=[
@@ -74,6 +61,7 @@ def main():
     test_path=main_path/'data'/'test.csv'
 
     train,test=pd.read_csv(train_path),pd.read_csv(test_path)
+    train.drop([523,1298]) ##dropping bad datapoints
 
     print('Train and test datasets loaded.')
 
@@ -126,7 +114,7 @@ def main():
     print(model1.best_params_)
 
     #model1.fit()
-
+    print('Testing on test set: \n')
 
     from sklearn.metrics import mean_squared_log_error
     score_predictions=model1.predict(x_test)
