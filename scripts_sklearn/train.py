@@ -38,7 +38,8 @@ def pipeline_builder(n_cols,c_cols,o_cols,b_cols):
     ('onehot', OneHotEncoder(handle_unknown='ignore'))])
     binned_transformer = Pipeline(steps=[('inp',SimpleImputer(strategy='median')),
                                     ('KBinsDiscretizer',KBinsDiscretizer(n_bins=10))])
-    ordinal_transformer = Pipeline(steps=[('onehot', OrdinalEncoder())])
+    ordinal_transformer = Pipeline(steps=[('inp',SimpleImputer(strategy='constant',fill_value=-1)),
+    ('onehot', OrdinalEncoder(handle_unknown='use_encoded_value'))])
     preprocessor = ColumnTransformer(
     transformers=[
         ('num', numeric_transformer, n_cols),
@@ -61,11 +62,7 @@ def xy_split(df,label):
     return x,y
 
 
-def make_prediction(model,test_df):
-    pred=model.predict(test_df)
-    out_df=test_df['Id']
-    out_df['SalePrice']=pred
-    return out_df
+
 
 def main():
     cur_path = os.path.dirname(__file__)
@@ -74,7 +71,7 @@ def main():
     main_path=pathlib.Path(cur_path).parent
     print(main_path)
     train_path=main_path/'data'/'train.csv'
-    test_path=main_path/'data'/'train.csv'
+    test_path=main_path/'data'/'test.csv'
 
     train,test=pd.read_csv(train_path),pd.read_csv(test_path)
 
@@ -89,25 +86,25 @@ def main():
             'GarageFinish','KitchenQual','SaleType','PoolQC', 'OverallCond',
             'FullBath','HouseStyle','Condition1','MSZoning','BldgType','BsmtQual']
     int_num_f=['LotArea','LotFrontage','BsmtFinSF1','TotalBsmtSF',
-            'GrLivArea','GarageYrBlt','GarageArea','YearBuilt','MSSubClass']
-    int_ord_f=['GarageCars','OverallQual']
+            'GrLivArea','GarageYrBlt','GarageArea','YearBuilt','MSSubClass','GarageCars','OverallQual']
+    int_ord_f=[]
 
     binned_features=[]
     pipeline=pipeline_builder(int_num_f,int_cat_f,int_ord_f,binned_features)
 
     # define the parameters or load them from configuration file
     params = [{'regressor': [GradientBoostingRegressor()],
-    'regressor__learning_rate': [0.03,0.1, 0.5, 1.0],
-    'regressor__n_estimators' : [25,50, 100, 150,200]
+    'regressor__learning_rate': [0.001,0.03,0.1, 0.5, 1.0],
+    'regressor__n_estimators' : [25,50, 100, 200,300]
     },
     {
         'regressor':[RandomForestRegressor()],
-        'regressor__n_estimators' : [25,50, 100, 150,200]
+        'regressor__n_estimators' : [25,50, 100, 150,300]
     },
     {
     'regressor':[AdaBoostRegressor()],
     'regressor__learning_rate':[0.03,0.1, 0.5, 1.0],
-    'regressor__n_estimators' : [25,50, 100, 150,200],
+    'regressor__n_estimators' : [25,50, 100, 150,300],
     'regressor__loss':['linear','square']
     },
     {
@@ -122,7 +119,7 @@ def main():
     score = make_scorer(r2_score)
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
 
-    gridsearch=GridSearchCV(verbose=1,estimator=pipeline,param_grid=params,scoring=score,return_train_score=False,cv=3)
+    gridsearch=GridSearchCV(verbose=1,estimator=pipeline,param_grid=params,scoring=score,return_train_score=False,cv=3,n_jobs=-1)
     model1=gridsearch.fit(x_train,(y_train))
 
     print('GridCV performed, best parameters: ')
@@ -132,17 +129,32 @@ def main():
 
 
     from sklearn.metrics import mean_squared_log_error
-    predictions=model1.predict(x_test)
-    msle=mean_squared_log_error(y_true=y_test, y_pred=predictions)#msle is the metric evaluated in the kaggle challange
-    r2=r2_score(y_true=y_test, y_pred=predictions)
+    score_predictions=model1.predict(x_test)
+    msle=mean_squared_log_error(y_true=y_test, y_pred=score_predictions)#msle is the metric evaluated in the kaggle challange
+    r2=r2_score(y_true=y_test, y_pred=score_predictions)
 
-    print(f'r2 score: {r2:.4f}'
-    f'msle: {msle:.1f}')
+    print(f'R2 score: {r2:.4f}\n'
+    f'MSLE: {msle}')
 
+    timestamp=datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     savemodel=True
     if savemodel:
-        path=main_path/'models'
-        save_model(model1,path)
+        models_path=main_path/'models'
+        os.makedirs(main_path,exist_ok=True)
+        save_model(model1,models_path,timestamp)
+
+    pred_df=pd.read_csv(main_path/'data/sample_submission.csv')
+    predictions=model1.predict(test)
+    
+    predictions_path=main_path/'predictions'
+    os.makedirs(predictions_path,exist_ok=True)
+    predictions_filename='skl_pred_'+timestamp+'.csv'
+    print(f'Writing predictions to {predictions_path/predictions_filename}\n')
+
+
+    pred_df['SalePrice']=predictions
+    pred_df.to_csv(predictions_path/predictions_filename,index=False)
+
     print('DONE.')
 
 if __name__ == '__main__':

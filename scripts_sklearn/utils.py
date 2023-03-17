@@ -3,11 +3,13 @@ from sklearn.metrics import mean_squared_log_error
 from sklearn.metrics import r2_score
 from joblib import dump
 import datetime
+import numpy as np
+import matplotlib.pyplot as plt
+
 
 def score_and_visualize(model,x_test,y_test):
 
-    import numpy as np
-    import matplotlib.pyplot as plt
+
     predictions=model.predict(x_test)
     plt.figure(figsize=(10,10))
     plt.scatter(y_test,predictions)
@@ -22,11 +24,12 @@ def score_and_visualize(model,x_test,y_test):
     plt.axline((0,0),slope=1,ls='--')
     plt.show()
 
-def save_model(model,models_folder):
+def save_model(model,models_folder,timestamp):
     '''model: sklearn model
-    models_folder: folder where saving the model'''
+    models_folder: folder where saving the model
+    timestamp: timestamp'''
     
-    timestamp=datetime.datetime.now().strftime("%d%m%Y%H%M%S")
+    #timestamp=datetime.datetime.now().strftime("%d%m%Y%H%M%S")
     #I have to go up one folder
     os.makedirs(models_folder,exist_ok=True)
     model_name= 'skl_model_'+ timestamp +'.joblib'
@@ -34,3 +37,9 @@ def save_model(model,models_folder):
     
     dump(model, modelpath)
     print('Saved ' , modelpath)
+
+def make_prediction(model,test_df):
+    pred=model.predict(test_df)
+    out_df=test_df['Id']
+    out_df['SalePrice']=pred
+    return out_df
