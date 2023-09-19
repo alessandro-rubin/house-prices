@@ -97,5 +97,16 @@ def main():
 
     history2=house_price_model.fit(x=train_features_dict, y=train[label], epochs=200,batch_size=15,validation_split=split_fraction)
 
+
+
+    test_feature_dict={name:np.array(test[name]) for name in (int_num_f+int_cat_f)}
+    for name in int_num_f:
+        test_feature_dict[name]=tf.cast(test_feature_dict[name],tf.float32)
+
+    for name in int_cat_f:
+        test_feature_dict[name]=tf.cast(test_feature_dict[name],tf.string)
+
+    pred=house_price_model.predict(test_feature_dict)
+
 if __name__ == '__main__':
     main()
